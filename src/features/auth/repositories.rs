@@ -120,10 +120,21 @@ impl AuthRepoImpl for AuthRepo {
         sqlx::query_as!(
             User,
             r#"
-            UPDATE gossip_user
-            SET is_verified = TRUE
-            WHERE email = $1
-            RETURNING *
+            WITH
+                update_result AS (
+                    UPDATE gossip_user
+                    SET is_verified = TRUE
+                    WHERE email = $1
+                    RETURNING id
+                ),
+                _ AS (
+                    DELETE FROM pending_email_verification
+                    WHERE user_id IN (SELECT id FROM update_result)
+                )
+
+            SELECT *
+            FROM gossip_user
+            WHERE id IN (SELECT id FROM update_result)
             "#r,
             email
         )
@@ -197,5 +208,38 @@ mod tests {
         assert_eq!(id, None);
         assert_eq!(user.email, "a.b@c.com");
         assert_eq!(user.password_hash, "def");
+    }
+
+    #[sqlx::test]
+    async fn test_verify_email_deletes_verification_code(pool: PgPool) {
+        let repo = AuthRepo { db: pool.clone() };
+
+        let id = repo
+            .create_user("a.b@c.com", "abc", "me", "123456")
+            .await
+            .expect("should return user ID");
+
+        let verification = repo.get_pending_verification("a.b@c.com").await;
+        assert!(verification.is_some());
+
+        let user = repo
+            .verify_email("a.b@c.com")
+            .await
+            .expect("should return user");
+
+        let verification = repo.get_pending_verification("a.b@c.com").await;
+        assert!(verification.is_none());
+
+        assert_eq!(user.id, id);
+        assert_eq!(user.email, "a.b@c.com");
+        assert_eq!(user.username, "me");
+        assert_eq!(user.password_hash, "abc");
+
+        let user = sqlx::query_as!(User, "SELECT * FROM gossip_user WHERE id = $1", id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        assert!(user.is_verified);
     }
 }
