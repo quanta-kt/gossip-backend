@@ -7,6 +7,7 @@ use argon2::{
 use axum::{extract::State, http::StatusCode, routing::post, Extension, Json, Router};
 use mail_send::{mail_builder::MessageBuilder, SmtpClientBuilder};
 use rand::Rng;
+use tokio::spawn;
 
 use crate::{
     features::auth::{jwt, repositories::AuthRepoImpl},
@@ -133,9 +134,28 @@ async fn verify_email(
         return Err(StatusCode::UNAUTHORIZED);
     }
 
-    repo.verify_email(&body.email)
+    let user = repo
+        .verify_email(&body.email)
         .await
         .ok_or_else(|| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    spawn(async move {
+        let message = MessageBuilder::new()
+            .from((config.mail_author, config.mail_email))
+            .to((user.username.as_str(), body.email.as_str()))
+            .subject("Welcome to Gossip App!")
+            .html_body(format!(r#"Your account has been verified."#,));
+
+        SmtpClientBuilder::new(config.mail_host.as_str(), config.mail_port)
+            .implicit_tls(config.mail_tls)
+            .credentials((config.mail_username.as_str(), config.mail_password.as_str()))
+            .connect()
+            .await
+            .unwrap()
+            .send(message)
+            .await
+            .unwrap();
+    });
 
     return Ok(Json(LoginResponse {
         token: jwt::encode(pending_verification.user_id, config.jwt_secret.as_ref())

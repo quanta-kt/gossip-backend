@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use axum::async_trait;
 
-use crate::{db::Db, features::auth::models::PendingEmailVerification};
+use crate::{
+    db::Db,
+    features::{auth::models::PendingEmailVerification, users::models::User},
+};
 
 use super::models::UserIdPassword;
 
@@ -28,7 +31,7 @@ pub trait AuthRepoImpl {
 
     async fn get_pending_verification(&self, email: &str) -> Option<PendingEmailVerification>;
 
-    async fn verify_email(&self, email: &str) -> Option<i32>;
+    async fn verify_email(&self, email: &str) -> Option<User>;
 }
 
 #[async_trait]
@@ -113,13 +116,14 @@ impl AuthRepoImpl for AuthRepo {
         .unwrap()
     }
 
-    async fn verify_email(&self, email: &str) -> Option<i32> {
-        sqlx::query_scalar!(
+    async fn verify_email(&self, email: &str) -> Option<User> {
+        sqlx::query_as!(
+            User,
             r#"
             UPDATE gossip_user
             SET is_verified = TRUE
             WHERE email = $1
-            RETURNING id
+            RETURNING *
             "#r,
             email
         )
