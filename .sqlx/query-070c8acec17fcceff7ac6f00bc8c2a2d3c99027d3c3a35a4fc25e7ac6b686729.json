@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_id, code\n            FROM pending_email_verification\n            JOIN gossip_user ON\n                gossip_user.id = pending_email_verification.user_id\n            WHERE\n                gossip_user.email = $1 AND gossip_user.is_verified = FALSE\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "code",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "070c8acec17fcceff7ac6f00bc8c2a2d3c99027d3c3a35a4fc25e7ac6b686729"
+}
