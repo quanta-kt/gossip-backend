@@ -1,5 +1,5 @@
 use utoipa::{
-    openapi::security::{ApiKey, ApiKeyValue, OAuth2, SecurityScheme},
+    openapi::security::{ApiKey, ApiKeyValue, SecurityScheme},
     Modify, OpenApi,
 };
 
