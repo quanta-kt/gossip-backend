@@ -32,3 +32,43 @@ impl UserRepoImpl for UserRepo {
             .unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use sqlx::PgPool;
+
+    use super::*;
+
+    #[sqlx::test]
+    async fn test_should_not_fetch_unverified_users_by_id(pool: PgPool) {
+        let repo = UserRepo { db: pool.clone() };
+
+        let user_id = sqlx::query_file!(
+            "queries/auth/create_user.sql",
+            "abc@def.com",
+            "def",
+            "ghi",
+            "jkl"
+        )
+        .fetch_optional(&pool.clone())
+        .await
+        .unwrap()
+        .unwrap()
+        .user_id;
+
+        let user = repo.find_by_id(user_id).await;
+        assert!(user.is_none());
+
+        let user = repo.find_by_email("abc@def.com").await;
+        assert!(user.is_none());
+
+        let auth_user = sqlx::query_file!("queries/auth/verify_email.sql", "abc@def.com")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let user = repo.find_by_id(user_id).await.unwrap();
+        assert_eq!(user.username, "ghi");
+        assert_eq!(auth_user.email, "abc@def.com")
+    }
+}
