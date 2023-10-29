@@ -9,10 +9,7 @@ use mail_send::{mail_builder::MessageBuilder, SmtpClientBuilder};
 use rand::Rng;
 use tokio::spawn;
 
-use crate::{
-    features::auth::{jwt, repositories::AuthRepoImpl},
-    state::AppState,
-};
+use crate::{features::auth::repositories::AuthRepoImpl, jwt, state::AppState};
 
 use super::{
     models::{LoginRequest, LoginResponse, RegisterRequest, VerifyEmailRequest},

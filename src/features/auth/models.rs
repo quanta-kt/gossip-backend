@@ -1,6 +1,14 @@
+use sqlx::FromRow;
 use utoipa::ToSchema;
 
-use crate::features::users::models::User;
+#[derive(Debug, Clone, FromRow)]
+pub struct AuthUser {
+    pub id: i32,
+    pub username: String,
+    pub email: String,
+    pub password_hash: String,
+    pub is_verified: bool,
+}
 
 #[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
 pub struct PendingEmailVerification {
@@ -37,8 +45,6 @@ pub struct TokenClaims {
     pub id: i32,
     pub exp: usize,
 }
-
-pub struct AuthUser(pub User);
 
 #[derive(sqlx::FromRow, Debug, serde::Serialize, serde::Deserialize)]
 pub struct UserIdPassword {

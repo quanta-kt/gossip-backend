@@ -2,12 +2,9 @@ use std::sync::Arc;
 
 use axum::async_trait;
 
-use crate::{
-    db::Db,
-    features::{auth::models::PendingEmailVerification, users::models::User},
-};
+use crate::{db::Db, features::auth::models::PendingEmailVerification};
 
-use super::models::UserIdPassword;
+use super::models::{AuthUser, UserIdPassword};
 
 pub type AuthRepoExt = Arc<AuthRepo>;
 
@@ -31,7 +28,7 @@ pub trait AuthRepoImpl {
 
     async fn get_pending_verification(&self, email: &str) -> Option<PendingEmailVerification>;
 
-    async fn verify_email(&self, email: &str) -> Option<User>;
+    async fn verify_email(&self, email: &str) -> Option<AuthUser>;
 }
 
 #[async_trait]
@@ -76,6 +73,9 @@ impl AuthRepoImpl for AuthRepo {
             INSERT INTO pending_email_verification (user_id, code)
             SELECT id, $4
             FROM insert_result
+            ON CONFLICT (user_id)
+                DO UPDATE
+                SET code = $4
             RETURNING user_id 
             "#r,
             email,
@@ -116,9 +116,9 @@ impl AuthRepoImpl for AuthRepo {
         .unwrap()
     }
 
-    async fn verify_email(&self, email: &str) -> Option<User> {
+    async fn verify_email(&self, email: &str) -> Option<AuthUser> {
         sqlx::query_as!(
-            User,
+            AuthUser,
             r#"
             WITH
                 update_result AS (
@@ -132,7 +132,7 @@ impl AuthRepoImpl for AuthRepo {
                     WHERE user_id IN (SELECT id FROM update_result)
                 )
 
-            SELECT *
+            SELECT id, username, email, password_hash, is_verified
             FROM gossip_user
             WHERE id IN (SELECT id FROM update_result)
             "#r,
@@ -174,7 +174,18 @@ mod tests {
             .await
             .unwrap();
 
-        let user = user_repo.find_by_id(id).await.expect("should return user");
+        let user = sqlx::query_as!(
+            AuthUser,
+            r#"
+            SELECT id, username, email, password_hash, is_verified
+            FROM gossip_user
+            WHERE id = $1
+            "#r,
+            id
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("should return user");
 
         assert_eq!(user.email, "a.b@c.com");
         assert_eq!(user.password_hash, "abc");
@@ -184,7 +195,18 @@ mod tests {
             .await
             .expect("should return user ID");
 
-        let user = user_repo.find_by_id(id).await.expect("should return user");
+        let user = sqlx::query_as!(
+            AuthUser,
+            r#"
+            SELECT id, username, email, password_hash, is_verified
+            FROM gossip_user
+            WHERE id = $1
+            "#r,
+            id
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("should return user");
 
         assert_eq!(&id, &user.id);
         assert_eq!(&user.email, "a.b@c.com");
@@ -206,6 +228,20 @@ mod tests {
         let id = repo.create_user("a.b@c.com", "ghi", "abc", "123").await;
 
         assert_eq!(id, None);
+
+        let user = sqlx::query_as!(
+            AuthUser,
+            r#"
+            SELECT id, username, email, password_hash, is_verified
+            FROM gossip_user
+            WHERE id = $1
+            "#r,
+            user.id
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("should return user");
+
         assert_eq!(user.email, "a.b@c.com");
         assert_eq!(user.password_hash, "def");
     }
@@ -235,10 +271,17 @@ mod tests {
         assert_eq!(user.username, "me");
         assert_eq!(user.password_hash, "abc");
 
-        let user = sqlx::query_as!(User, "SELECT * FROM gossip_user WHERE id = $1", id)
-            .fetch_one(&pool)
-            .await
-            .unwrap();
+        let user = sqlx::query_as!(
+            AuthUser,
+            r#"
+            SELECT id, email, username, password_hash, is_verified
+            FROM gossip_user WHERE id = $1
+            "#r,
+            id
+        )
+        .fetch_one(&pool)
+        .await
+        .unwrap();
 
         assert!(user.is_verified);
     }

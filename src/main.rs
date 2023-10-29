@@ -1,6 +1,7 @@
 mod config;
 mod db;
 mod features;
+mod jwt;
 mod openapi;
 mod state;
 

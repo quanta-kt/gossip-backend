@@ -2,7 +2,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use jsonwebtoken::{DecodingKey, TokenData, Validation};
 
-use super::models::TokenClaims;
+use super::features::auth::models::TokenClaims;
 
 pub fn decode(
     token: &str,

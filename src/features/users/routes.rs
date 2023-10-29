@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use axum::{extract::Path, http::StatusCode, routing::get, Extension, Json, Router};
 
-use crate::{features::auth::models::AuthUser, state::AppState};
+use crate::state::AppState;
 
 use super::{
-    models::User,
+    models::UserProfile,
     repositories::{UserRepo, UserRepoExt, UserRepoImpl},
 };
 
@@ -23,7 +23,7 @@ pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     get,
     path = "/user/{id}",
     responses(
-        (status = 200, body = User),
+        (status = 200, body = UserProfile),
         (status = 404, description = "User not found."),
     ),
     tag = "users",
@@ -31,7 +31,7 @@ pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
 async fn user_by_id(
     Path(id): Path<i32>,
     Extension(repo): UserRepoExt,
-) -> Result<Json<User>, StatusCode> {
+) -> Result<Json<UserProfile>, StatusCode> {
     let user = repo.find_by_id(id).await;
 
     match user {
@@ -44,7 +44,7 @@ async fn user_by_id(
     get,
     path = "/user/by-email/{email}",
     responses(
-        (status = 200, body = User),
+        (status = 200, body = UserProfile),
         (status = 404, description = "User not found."),
     ),
     tag = "users",
@@ -52,7 +52,7 @@ async fn user_by_id(
 async fn user_by_email(
     Path(email): Path<String>,
     Extension(repo): UserRepoExt,
-) -> Result<Json<User>, StatusCode> {
+) -> Result<Json<UserProfile>, StatusCode> {
     let user = repo.find_by_email(&email).await;
 
     match user {
@@ -65,7 +65,7 @@ async fn user_by_email(
     get,
     path = "/user/me",
     responses(
-        (status = 200, body = User),
+        (status = 200, body = UserProfile),
         (status = 401, description = "Unauthorized."),
     ),
     tag = "users",
@@ -73,6 +73,6 @@ async fn user_by_email(
         ("api_key" = [])
     )
 )]
-async fn me(AuthUser(user): AuthUser) -> Json<User> {
+async fn me(user: UserProfile) -> Json<UserProfile> {
     Json(user)
 }

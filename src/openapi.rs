@@ -20,7 +20,7 @@ use utoipa::{
         crate::features::auth::models::RegisterRequest,
         crate::features::auth::models::VerifyEmailRequest,
 
-        crate::features::users::models::User,
+        crate::features::users::models::UserProfile,
     )),
     modifiers(&SecurityAddon),
     tags(

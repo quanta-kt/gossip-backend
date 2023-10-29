@@ -6,11 +6,12 @@ use axum::{
     http::{header, request::Parts, StatusCode},
 };
 
-use super::models::AuthUser;
 use crate::{jwt, state::AppState};
 
+use super::models::UserProfile;
+
 #[async_trait]
-impl FromRequestParts<Arc<AppState>> for AuthUser {
+impl FromRequestParts<Arc<AppState>> for UserProfile {
     type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(
@@ -39,10 +40,8 @@ impl FromRequestParts<Arc<AppState>> for AuthUser {
         let user_id = claims.id;
 
         let user = sqlx::query_as!(
-            AuthUser,
-            "SELECT id, email, username, password_hash, is_verified
-            FROM gossip_user
-            WHERE id = $1",
+            UserProfile,
+            "SELECT id, username, bio FROM gossip_user WHERE id = $1",
             user_id
         )
         .fetch_optional(&state.db)

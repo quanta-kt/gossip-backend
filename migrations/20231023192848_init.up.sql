@@ -3,6 +3,7 @@ CREATE TABLE gossip_user(
     username TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    bio TEXT NOT NULL DEFAULT '',
 
     is_verified BOOLEAN NOT NULL DEFAULT FALSE
 );
