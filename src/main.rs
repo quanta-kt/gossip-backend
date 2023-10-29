@@ -1,6 +1,7 @@
 mod config;
 mod db;
 mod features;
+mod openapi;
 mod state;
 
 use std::sync::Arc;
@@ -8,13 +9,19 @@ use std::sync::Arc;
 use axum::{Router, Server};
 
 use config::Config;
+use openapi::ApiDoc;
 use state::AppState;
 use tower_http::trace::TraceLayer;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
         .nest("/user", features::users::router(state.clone()))
         .nest("/auth", features::auth::router(state.clone()))
+        .merge(
+            SwaggerUi::new("/api-docs/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()),
+        )
 }
 
 #[tokio::main]

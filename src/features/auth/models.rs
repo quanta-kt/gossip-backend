@@ -1,3 +1,5 @@
+use utoipa::ToSchema;
+
 use crate::features::users::models::User;
 
 #[derive(Debug, sqlx::FromRow, serde::Serialize, serde::Deserialize)]
@@ -6,25 +8,25 @@ pub struct PendingEmailVerification {
     pub code: String,
 }
 
-#[derive(Debug, serde::Deserialize, Clone)]
+#[derive(Debug, serde::Deserialize, Clone, ToSchema)]
 pub struct LoginRequest {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, ToSchema)]
 pub struct LoginResponse {
     pub token: String,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone, ToSchema)]
 pub struct RegisterRequest {
     pub email: String,
     pub password: String,
     pub name: String,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone, ToSchema)]
 pub struct VerifyEmailRequest {
     pub email: String,
     pub code: String,

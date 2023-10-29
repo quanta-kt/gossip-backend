@@ -29,6 +29,16 @@ pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
         })))
 }
 
+#[utoipa::path(
+    post,
+    path = "/auth/login",
+    responses(
+        (status = 200, body = LoginResponse),
+        (status = 401, description = "Invalid email or password."),
+    ),
+    request_body = LoginRequest,
+    tag = "auth",
+)]
 async fn login(
     State(state): State<Arc<AppState>>,
     Extension(repo): Extension<AuthRepoExt>,
@@ -55,6 +65,16 @@ async fn login(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/auth/register",
+    responses(
+        (status = 201, description = "Verification email sent."),
+        (status = 409, description = "Email already taken."),
+    ),
+    request_body = RegisterRequest,
+    tag = "auth",
+)]
 async fn register(
     Extension(repo): Extension<AuthRepoExt>,
     State(state): State<Arc<AppState>>,
@@ -118,6 +138,16 @@ async fn register(
     }
 }
 
+#[utoipa::path(
+    post,
+    path = "/auth/verify",
+    responses(
+        (status = 200, body = LoginResponse),
+        (status = 401, description = "Invalid verification code."),
+    ),
+    request_body = VerifyEmailRequest,
+    tag = "auth",
+)]
 async fn verify_email(
     Extension(repo): Extension<AuthRepoExt>,
     State(state): State<Arc<AppState>>,

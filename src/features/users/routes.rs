@@ -19,6 +19,15 @@ pub fn router(state: Arc<AppState>) -> Router<Arc<AppState>> {
         })))
 }
 
+#[utoipa::path(
+    get,
+    path = "/user/{id}",
+    responses(
+        (status = 200, body = User),
+        (status = 404, description = "User not found."),
+    ),
+    tag = "users",
+)]
 async fn user_by_id(
     Path(id): Path<i32>,
     Extension(repo): UserRepoExt,
@@ -31,6 +40,15 @@ async fn user_by_id(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/user/by-email/{email}",
+    responses(
+        (status = 200, body = User),
+        (status = 404, description = "User not found."),
+    ),
+    tag = "users",
+)]
 async fn user_by_email(
     Path(email): Path<String>,
     Extension(repo): UserRepoExt,
@@ -43,6 +61,18 @@ async fn user_by_email(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/user/me",
+    responses(
+        (status = 200, body = User),
+        (status = 401, description = "Unauthorized."),
+    ),
+    tag = "users",
+    security(
+        ("api_key" = [])
+    )
+)]
 async fn me(AuthUser(user): AuthUser) -> Json<User> {
     Json(user)
 }
