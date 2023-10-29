@@ -19,24 +19,16 @@ pub trait UserRepoImpl {
 #[async_trait]
 impl UserRepoImpl for UserRepo {
     async fn find_by_id(&self, id: i32) -> Option<UserProfile> {
-        sqlx::query_as!(
-            UserProfile,
-            "SELECT id, username, bio FROM gossip_user WHERE id = $1",
-            id
-        )
-        .fetch_optional(&self.db)
-        .await
-        .unwrap()
+        sqlx::query_file_as!(UserProfile, "queries/users/get_profile_by_id.sql", id)
+            .fetch_optional(&self.db)
+            .await
+            .unwrap()
     }
 
     async fn find_by_email(&self, email: &str) -> Option<UserProfile> {
-        sqlx::query_as!(
-            UserProfile,
-            "SELECT id, username, bio FROM gossip_user WHERE email = $1",
-            email
-        )
-        .fetch_optional(&self.db)
-        .await
-        .unwrap()
+        sqlx::query_file_as!(UserProfile, "queries/users/get_profile_by_email.sql", email)
+            .fetch_optional(&self.db)
+            .await
+            .unwrap()
     }
 }

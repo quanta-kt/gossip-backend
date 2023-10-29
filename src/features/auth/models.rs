@@ -45,9 +45,3 @@ pub struct TokenClaims {
     pub id: i32,
     pub exp: usize,
 }
-
-#[derive(sqlx::FromRow, Debug, serde::Serialize, serde::Deserialize)]
-pub struct UserIdPassword {
-    pub id: i32,
-    pub password_hash: String,
-}

@@ -39,14 +39,11 @@ impl FromRequestParts<Arc<AppState>> for UserProfile {
 
         let user_id = claims.id;
 
-        let user = sqlx::query_as!(
-            UserProfile,
-            "SELECT id, username, bio FROM gossip_user WHERE id = $1",
-            user_id
-        )
-        .fetch_optional(&state.db)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error"))?;
+        let user =
+            sqlx::query_file_as!(UserProfile, "queries/users/get_profile_by_id.sql", user_id)
+                .fetch_optional(&state.db)
+                .await
+                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error"))?;
 
         let user = user.ok_or_else(|| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
 
