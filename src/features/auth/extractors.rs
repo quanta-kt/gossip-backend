@@ -38,16 +38,10 @@ impl FromRequestParts<Arc<AppState>> for AuthUser {
 
         let user_id = claims.id;
 
-        let user = sqlx::query_as!(
-            AuthUser,
-            "SELECT id, email, username, password_hash, is_verified
-            FROM gossip_user
-            WHERE id = $1",
-            user_id
-        )
-        .fetch_optional(&state.db)
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error"))?;
+        let user = sqlx::query_file_as!(AuthUser, "queries/auth/get_user_by_id.sql", user_id)
+            .fetch_optional(&state.db)
+            .await
+            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error"))?;
 
         let user = user.ok_or_else(|| (StatusCode::UNAUTHORIZED, "Invalid token"))?;
 
