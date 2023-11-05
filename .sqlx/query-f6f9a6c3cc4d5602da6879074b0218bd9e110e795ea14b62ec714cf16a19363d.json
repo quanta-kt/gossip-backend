@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT user_id, code\n            FROM pending_email_verification\n            JOIN gossip_user ON\n                gossip_user.id = pending_email_verification.user_id\n            WHERE\n                gossip_user.email = $1 AND gossip_user.is_verified = FALSE\n            ",
+  "query": "SELECT user_id, code\nFROM pending_email_verification\nJOIN gossip_user ON\n    gossip_user.id = pending_email_verification.user_id\nWHERE\n    gossip_user.email = $1 AND gossip_user.is_verified = FALSE\n",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       false
     ]
   },
-  "hash": "070c8acec17fcceff7ac6f00bc8c2a2d3c99027d3c3a35a4fc25e7ac6b686729"
+  "hash": "f6f9a6c3cc4d5602da6879074b0218bd9e110e795ea14b62ec714cf16a19363d"
 }

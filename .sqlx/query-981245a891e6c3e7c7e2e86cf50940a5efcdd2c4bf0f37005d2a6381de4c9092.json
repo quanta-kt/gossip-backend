@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nWITH insert_result AS(\n    INSERT INTO gossip_user (email, password_hash, username)\n    VALUES ($1, $2, $3)\n \n    -- Account creation is idempotent for unverified accounts,\n    -- if the email is taken, but the account is not verified, the creation should pass.\n    -- when this happens, we update the password and resend the OTP.\n    ON CONFLICT (email)\n        DO UPDATE\n        SET\n            password_hash = $2,\n            username = $3\n        WHERE gossip_user.is_verified = FALSE\n\n    RETURNING id\n)\n\nINSERT INTO pending_email_verification (user_id, code)\nSELECT id, $4\nFROM insert_result\nON CONFLICT (user_id)\n    DO UPDATE\n    SET code = $4\nRETURNING user_id ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "981245a891e6c3e7c7e2e86cf50940a5efcdd2c4bf0f37005d2a6381de4c9092"
+}

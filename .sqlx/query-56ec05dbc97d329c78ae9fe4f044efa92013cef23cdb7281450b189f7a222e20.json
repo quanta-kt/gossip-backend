@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM gossip_user WHERE email = $1",
+  "query": "SELECT\n    id, username, email, password_hash, is_verified\nFROM gossip_user\nWHERE email = $1\n",
   "describe": {
     "columns": [
       {
@@ -42,5 +42,5 @@
       false
     ]
   },
-  "hash": "74bfadb30ac96ead1c2e44f6098fc265e30e47fd0e6e3703df3037ce96c001ee"
+  "hash": "56ec05dbc97d329c78ae9fe4f044efa92013cef23cdb7281450b189f7a222e20"
 }

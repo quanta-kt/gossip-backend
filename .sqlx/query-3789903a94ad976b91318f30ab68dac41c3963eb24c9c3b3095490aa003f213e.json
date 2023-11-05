@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT EXISTS(SELECT 1 FROM gossip_user WHERE email = $1 AND is_verified = TRUE)",
+  "query": "SELECT EXISTS (SELECT 1 FROM gossip_user WHERE email = $1 AND is_verified = TRUE)\n",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       null
     ]
   },
-  "hash": "3ae03e367c668a4a6e2a31e26ad3022de41ef4dbca1ef39c2b9c15ecb4f54eeb"
+  "hash": "3789903a94ad976b91318f30ab68dac41c3963eb24c9c3b3095490aa003f213e"
 }
